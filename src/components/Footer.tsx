@@ -56,14 +56,12 @@ export function Footer({ onOpenModal }: FooterProps) {
             <div className="flex items-center gap-2 lg:justify-start">
               <a href="/">
                 <img
-                  src="https://i.imgur.com/FsiYz4M.jpeg"
+                  src="https://i.imgur.com/8xC4BlJ.png"
                   alt="RestituiAI"
                   title="RestituiAI"
-                  className="h-10 rounded-md"
-                  onError={(e) => (e.currentTarget.src = 'https://i.imgur.com/FsiYz4M.jpeg')}
+                  className="h-16 w-auto rounded-md"
                 />
               </a>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">RestituiAI</h2>
             </div>
             <p className="max-w-[70%] text-sm text-slate-600 dark:text-slate-400 text-justify">
               A isenção de Imposto de Renda para portadores de moléstia grave é um direito garantido pelo Art. 6º, inciso XIV, da Lei 7.713/88.

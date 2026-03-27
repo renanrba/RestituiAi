@@ -23,11 +23,14 @@ import {
   Edit2,
   Trash2,
   Image as ImageIcon,
-  Clock
+  Clock,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Navbar } from '../components/Navbar';
+import { useTheme } from '../components/ThemeProvider';
 import { BlogPostForm } from '../components/BlogPostForm';
+import { Button } from '../components/ui/button';
 
 interface Lead {
   id: string;
@@ -63,6 +66,7 @@ export function AdminDashboard() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,6 +81,9 @@ export function AdminDashboard() {
     localStorage.removeItem('admin_session');
     navigate('/admin/login');
   };
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   async function fetchLeads() {
     if (!supabase) {
@@ -125,15 +132,23 @@ export function AdminDashboard() {
     }
   }
 
-  async function handleDeletePost(id: string) {
-    if (!window.confirm('Tem certeza que deseja excluir este artigo?')) return;
+  const confirmDeletePost = (id: string) => {
+    setPostToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  async function handleDeletePost() {
+    if (!postToDelete) return;
     
     try {
-      const { error } = await supabase.from('posts').delete().eq('id', id);
+      const { error } = await supabase.from('posts').delete().eq('id', postToDelete);
       if (error) throw error;
-      setPosts(posts.filter(p => p.id !== id));
+      setPosts(posts.filter(p => p.id !== postToDelete));
+      setIsDeleteModalOpen(false);
+      setPostToDelete(null);
     } catch (err: any) {
-      alert('Erro ao excluir post: ' + err.message);
+      setError('Erro ao excluir post: ' + err.message);
+      setIsDeleteModalOpen(false);
     }
   }
 
@@ -150,12 +165,81 @@ export function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#050814] transition-colors duration-300">
-      <Navbar onOpenModal={() => {}} />
+      {/* Admin Header */}
+      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-[#050814]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/10">
+        <div className="container mx-auto max-w-7xl px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <img 
+                src="https://i.imgur.com/FsiYz4M.jpeg" 
+                alt="RestituiAI" 
+                className="h-8 w-auto rounded-md" 
+                onError={(e) => (e.currentTarget.src = 'https://i.imgur.com/8xC4BlJ.png')}
+              />
+              <span className="font-bold text-slate-900 dark:text-white hidden sm:inline-block">Admin Panel</span>
+            </div>
+            
+            <nav className="hidden md:flex items-center gap-1 ml-8">
+              <button 
+                onClick={() => setActiveTab('leads')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'leads' ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'}`}
+              >
+                <Users className="w-4 h-4" /> Leads
+              </button>
+              <button 
+                onClick={() => setActiveTab('blog')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'blog' ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'}`}
+              >
+                <FileText className="w-4 h-4" /> Blogs
+              </button>
+            </nav>
+          </div>
+
+          {/* Mobile Tab Switcher */}
+          <div className="flex md:hidden items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl mx-2">
+            <button 
+              onClick={() => setActiveTab('leads')}
+              className={`p-2 rounded-lg transition-all ${activeTab === 'leads' ? 'bg-white dark:bg-white/10 text-brand-600 dark:text-brand-400 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+              title="Leads"
+            >
+              <Users className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setActiveTab('blog')}
+              className={`p-2 rounded-lg transition-all ${activeTab === 'blog' ? 'bg-white dark:bg-white/10 text-brand-600 dark:text-brand-400 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+              title="Blogs"
+            >
+              <FileText className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="text-slate-600 dark:text-slate-400"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+            
+            <div className="h-6 w-px bg-slate-200 dark:border-white/10 mx-2" />
+            
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+        </div>
+      </header>
       
-      <main className="container px-4 mx-auto max-w-7xl pt-24 pb-12">        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+      <main className="container px-4 mx-auto max-w-7xl pt-8 pb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
             <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-bold text-sm uppercase tracking-wider mb-1">
-              <LayoutDashboard className="w-4 h-4" /> Painel Administrativo
+              <LayoutDashboard className="w-4 h-4" /> Dashboard
             </div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
               {activeTab === 'leads' ? 'Gerenciamento de Leads' : 'Gerenciamento do Blog'}
@@ -163,21 +247,6 @@ export function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-1 mr-2">
-              <button 
-                onClick={() => setActiveTab('leads')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'leads' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/10'}`}
-              >
-                <Users className="w-4 h-4" /> Leads
-              </button>
-              <button 
-                onClick={() => setActiveTab('blog')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'blog' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/10'}`}
-              >
-                <FileText className="w-4 h-4" /> Blog
-              </button>
-            </div>
-
             <button 
               onClick={activeTab === 'leads' ? fetchLeads : fetchPosts}
               className="p-2.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors"
@@ -203,14 +272,6 @@ export function AdminDashboard() {
                 <Download className="w-4 h-4" /> Exportar CSV
               </button>
             )}
-            
-            <button 
-              onClick={handleLogout}
-              className="p-2.5 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
-              title="Sair"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
           </div>
         </div>
 
@@ -423,7 +484,7 @@ export function AdminDashboard() {
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button 
-                              onClick={() => handleDeletePost(post.id)}
+                              onClick={() => confirmDeletePost(post.id)}
                               className="p-2 text-slate-400 hover:text-red-500 transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -478,6 +539,53 @@ export function AdminDashboard() {
                     fetchPosts();
                   }} 
                 />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl z-10 p-8"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center mb-4">
+                  <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Excluir Artigo</h3>
+                <p className="text-slate-500 dark:text-slate-400 mb-8">
+                  Tem certeza que deseja excluir este artigo? Esta ação não pode ser desfeita.
+                </p>
+                
+                <div className="flex gap-3 w-full">
+                  <button 
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="flex-grow py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleDeletePost}
+                    className="flex-grow py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-2xl transition-colors"
+                  >
+                    Excluir
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

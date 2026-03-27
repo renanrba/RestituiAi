@@ -64,7 +64,7 @@ export function AboutUs() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                   <h4 className="text-lg font-bold">Renally Lima</h4>
-                  <p className="text-brand-300 font-medium text-sm">OAB/PB 27.126</p>
+                  <p className="text-brand-300 font-medium text-sm">Advogada OAB/PB 27.126</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 font-medium text-center mb-2">Coordenação jurídica e tributária</p>
@@ -85,7 +85,7 @@ export function AboutUs() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                   <h4 className="text-lg font-bold">Renan Ribeiro</h4>
-                  <p className="text-brand-300 font-medium text-sm">Tecnologia & IA</p>
+                  <p className="text-brand-300 font-medium text-sm">Consultor Senior de Negocios em TI</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 font-medium text-center mb-2">Suporte de IA / Tecnologia</p>

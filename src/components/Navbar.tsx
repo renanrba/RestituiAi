@@ -59,10 +59,9 @@ export function Navbar({ onOpenModal }: NavbarProps) {
       >
         <Link to="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
           <img 
-            src="https://i.imgur.com/FsiYz4M.jpeg" 
+            src="https://i.imgur.com/8xC4BlJ.png" 
             alt="RestituiAI" 
             className="h-10 w-auto rounded-md" 
-            onError={(e) => (e.currentTarget.src = 'https://i.imgur.com/FsiYz4M.jpeg')}
           />
         </Link>
         <div className="hidden items-center gap-2 md:flex">
