@@ -15,7 +15,9 @@ import {
   Undo, 
   Redo,
   Plus,
-  Type
+  Type,
+  Upload,
+  X
 } from 'lucide-react';
 import { useEditor, EditorContent, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -258,6 +260,7 @@ export function BlogPostForm({ post, onSuccess }: BlogPostFormProps) {
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [categories, setCategories] = useState(['Isenção', 'Restituição', 'Direitos', 'Guia']);
+  const [isUploading, setIsUploading] = useState(false);
   
   const [formData, setFormData] = useState<Post>({
     title: '',
@@ -376,6 +379,48 @@ export function BlogPostForm({ post, onSuccess }: BlogPostFormProps) {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `blog/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('blog-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        if (uploadError.message.includes('bucket not found')) {
+          throw new Error('O bucket "blog-images" não foi encontrado no Supabase. Por favor, crie um bucket público chamado "blog-images" no painel do Supabase.');
+        }
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('blog-images')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, image: publicUrl }));
+    } catch (err: any) {
+      console.error('Error uploading image:', err);
+      setError(err.message || 'Erro ao fazer upload da imagem');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
@@ -465,29 +510,66 @@ export function BlogPostForm({ post, onSuccess }: BlogPostFormProps) {
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">URL da Imagem</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <ImageIcon className="h-5 w-5 text-gray-400" />
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Imagem do Artigo</label>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-grow space-y-2">
+              <label className="text-xs text-slate-500 dark:text-slate-400">URL da Imagem</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <ImageIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="url"
+                  name="image"
+                  required
+                  value={formData.image}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-slate-900 dark:text-white"
+                  placeholder="https://images.unsplash.com/..."
+                />
+              </div>
             </div>
-            <input
-              type="url"
-              name="image"
-              required
-              value={formData.image}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-slate-900 dark:text-white"
-              placeholder="https://images.unsplash.com/..."
-            />
+            
+            <div className="flex flex-col justify-end space-y-2">
+              <label className="text-xs text-slate-500 dark:text-slate-400">Ou faça upload</label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="image-upload"
+                  disabled={isUploading}
+                />
+                <label
+                  htmlFor="image-upload"
+                  className={`flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer text-slate-700 dark:text-slate-300 font-bold ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {isUploading ? 'Enviando...' : 'Upload'}
+                </label>
+              </div>
+            </div>
           </div>
+          
           {formData.image && (
-            <div className="mt-2 relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
+            <div className="mt-4 relative aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group">
               <img 
                 src={formData.image} 
                 alt="Preview" 
                 className="w-full h-full object-cover"
                 onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=800')}
               />
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                  className="p-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg"
+                  title="Remover imagem"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>
