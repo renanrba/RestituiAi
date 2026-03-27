@@ -1,20 +1,52 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Calendar, Clock, Search } from 'lucide-react';
+import { ArrowRight, Calendar, Clock, Search, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { articles } from '../data/articles';
+import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { LeadModal } from '../components/LeadModal';
+
+interface Post {
+  id: string;
+  title: string;
+  excerpt: string;
+  image: string;
+  category: string;
+  date: string;
+  read_time: string;
+}
 
 export function BlogPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = ['Todos', ...Array.from(new Set(articles.map(a => a.category)))];
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
-  const filteredArticles = articles.filter(article => {
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPosts(data || []);
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const categories = ['Todos', ...Array.from(new Set(posts.map(a => a.category)))];
+
+  const filteredArticles = posts.filter(article => {
     const matchesCategory = filter === 'Todos' || article.category === filter;
     const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           article.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
@@ -67,65 +99,71 @@ export function BlogPage() {
           </div>
 
           {/* Articles Grid */}
-          <div className="grid md:grid-cols-3 gap-8">
-            {filteredArticles.length > 0 ? (
-              filteredArticles.map((article, index) => (
-                <motion.article
-                  key={article.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group flex flex-col bg-white dark:bg-white/5 rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md dark:shadow-none transition-all hover:-translate-y-1"
-                >
-                  <Link to={`/blog/${article.id}`} className="relative h-48 overflow-hidden block">
-                    <img 
-                      src={article.image} 
-                      alt={article.title} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-slate-900 dark:text-white">
-                      {article.category}
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </Link>
-                  
-                  <div className="p-6 flex flex-col flex-grow">
-                    <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" />
-                        <span>{article.date}</span>
+          {loading ? (
+            <div className="flex justify-center items-center py-24">
+              <Loader2 className="w-12 h-12 text-brand-600 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8">
+              {filteredArticles.length > 0 ? (
+                filteredArticles.map((article, index) => (
+                  <motion.article
+                    key={article.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group flex flex-col bg-white dark:bg-white/5 rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md dark:shadow-none transition-all hover:-translate-y-1"
+                  >
+                    <Link to={`/blog/${article.id}`} className="relative h-48 overflow-hidden block">
+                      <img 
+                        src={article.image} 
+                        alt={article.title} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-slate-900 dark:text-white">
+                        {article.category}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" />
-                        <span>{article.readTime}</span>
-                      </div>
-                    </div>
-                    
-                    <Link to={`/blog/${article.id}`}>
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-brand-800 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
-                        {article.title}
-                      </h3>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </Link>
                     
-                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-3 text-justify">
-                      {article.excerpt}
-                    </p>
-                    
-                    <div className="mt-auto pt-4 border-t border-slate-100 dark:border-white/10">
-                      <Link to={`/blog/${article.id}`} className="inline-flex items-center gap-2 text-sm font-semibold text-brand-800 dark:text-brand-400 group-hover:gap-3 transition-all">
-                        Ler artigo completo <ArrowRight className="w-4 h-4" />
+                    <div className="p-6 flex flex-col flex-grow">
+                      <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4" />
+                          <span>{article.date}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4" />
+                          <span>{article.read_time}</span>
+                        </div>
+                      </div>
+                      
+                      <Link to={`/blog/${article.id}`}>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-brand-800 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
+                          {article.title}
+                        </h3>
                       </Link>
+                      
+                      <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-3 text-justify">
+                        {article.excerpt}
+                      </p>
+                      
+                      <div className="mt-auto pt-4 border-t border-slate-100 dark:border-white/10">
+                        <Link to={`/blog/${article.id}`} className="inline-flex items-center gap-2 text-sm font-semibold text-brand-800 dark:text-brand-400 group-hover:gap-3 transition-all">
+                          Ler artigo completo <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                </motion.article>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-slate-500 dark:text-slate-400">Nenhum artigo encontrado para a sua busca.</p>
-              </div>
-            )}
-          </div>
+                  </motion.article>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-slate-500 dark:text-slate-400">Nenhum artigo encontrado para a sua busca.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
 

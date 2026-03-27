@@ -1,21 +1,59 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Share2 } from 'lucide-react';
-import { articles } from '../data/articles';
+import { ArrowLeft, Calendar, Clock, Share2, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { LeadModal } from '../components/LeadModal';
+
+interface Post {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  image: string;
+  category: string;
+  date: string;
+  read_time: string;
+}
 
 export function ArticlePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [article, setArticle] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  const article = articles.find(a => a.id === id);
-
   useEffect(() => {
     window.scrollTo(0, 0);
+    fetchArticle();
   }, [id]);
+
+  const fetchArticle = async () => {
+    if (!id) return;
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setArticle(data);
+    } catch (err) {
+      console.error('Error fetching article:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#050814]">
+        <Loader2 className="w-12 h-12 text-brand-600 animate-spin" />
+      </div>
+    );
+  }
 
   if (!article) {
     return (
@@ -57,7 +95,7 @@ export function ArticlePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{article.readTime}</span>
+                  <span>{article.read_time}</span>
                 </div>
               </div>
               <button className="text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">

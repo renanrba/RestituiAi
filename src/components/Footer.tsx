@@ -59,7 +59,8 @@ export function Footer({ onOpenModal }: FooterProps) {
                   src="https://i.imgur.com/FsiYz4M.jpeg"
                   alt="RestituiAI"
                   title="RestituiAI"
-                  className="h-8 rounded-md"
+                  className="h-10 rounded-md"
+                  onError={(e) => (e.currentTarget.src = 'https://i.imgur.com/FsiYz4M.jpeg')}
                 />
               </a>
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">RestituiAI</h2>
