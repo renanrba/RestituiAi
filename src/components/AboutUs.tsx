@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Shield, Scale, Globe } from 'lucide-react';
+import { Shield, Globe } from 'lucide-react';
 
 export function AboutUs() {
   return (
@@ -31,10 +31,6 @@ export function AboutUs() {
 
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
-                <Scale className="w-5 h-5 text-brand-500" />
-                <span className="text-sm font-medium">OAB/PB 27.126</span>
-              </div>
-              <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                 <Shield className="w-5 h-5 text-brand-500" />
                 <span className="text-sm font-medium">Conformidade total com a LGPD</span>
               </div>
@@ -64,7 +60,7 @@ export function AboutUs() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                   <h4 className="text-lg font-bold">Renally Lima</h4>
-                  <p className="text-brand-300 font-medium text-sm">Advogada OAB/PB 27.126</p>
+                  <p className="text-brand-300 font-medium text-sm">Coordenadora Jurídica</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 font-medium text-center mb-2">Coordenação jurídica e tributária</p>
@@ -85,7 +81,7 @@ export function AboutUs() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                   <h4 className="text-lg font-bold">Renan Ribeiro</h4>
-                  <p className="text-brand-300 font-medium text-sm">Consultor Senior de Negocios em TI</p>
+                  <p className="text-brand-300 font-medium text-sm">Consultor Senior</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 font-medium text-center mb-2">Suporte de IA / Tecnologia</p>

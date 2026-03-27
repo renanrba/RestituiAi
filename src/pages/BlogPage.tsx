@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { LeadModal } from '../components/LeadModal';
+import { articles } from '../data/articles';
 
 interface Post {
   id: string;
@@ -36,9 +37,43 @@ export function BlogPage() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPosts(data || []);
+      
+      const supabasePosts = (data || []).map(post => ({
+        ...post,
+        read_time: post.read_time || '5 min'
+      }));
+
+      const localPosts = articles.map(article => ({
+        id: article.id,
+        title: article.title,
+        excerpt: article.excerpt,
+        image: article.image,
+        category: article.category,
+        date: article.date,
+        read_time: article.readTime
+      }));
+
+      // Combine and remove duplicates by ID (if any)
+      const combined = [...supabasePosts];
+      localPosts.forEach(local => {
+        if (!combined.find(p => p.id === local.id)) {
+          combined.push(local);
+        }
+      });
+
+      setPosts(combined);
     } catch (err) {
       console.error('Error fetching posts:', err);
+      // Fallback to local posts if Supabase fails
+      setPosts(articles.map(article => ({
+        id: article.id,
+        title: article.title,
+        excerpt: article.excerpt,
+        image: article.image,
+        category: article.category,
+        date: article.date,
+        read_time: article.readTime
+      })));
     } finally {
       setLoading(false);
     }

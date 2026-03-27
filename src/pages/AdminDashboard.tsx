@@ -171,10 +171,9 @@ export function AdminDashboard() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <img 
-                src="https://i.imgur.com/FsiYz4M.jpeg" 
+                src="https://i.imgur.com/8xC4BlJ.png" 
                 alt="RestituiAI" 
                 className="h-8 w-auto rounded-md" 
-                onError={(e) => (e.currentTarget.src = 'https://i.imgur.com/8xC4BlJ.png')}
               />
               <span className="font-bold text-slate-900 dark:text-white hidden sm:inline-block">Admin Panel</span>
             </div>

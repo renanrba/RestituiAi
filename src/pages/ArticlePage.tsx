@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { LeadModal } from '../components/LeadModal';
+import { articles } from '../data/articles';
 
 interface Post {
   id: string;
@@ -38,10 +39,45 @@ export function ArticlePage() {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
-      setArticle(data);
+      if (error) {
+        // Check local articles if not found in Supabase
+        const localArticle = articles.find(a => a.id === id);
+        if (localArticle) {
+          setArticle({
+            id: localArticle.id,
+            title: localArticle.title,
+            excerpt: localArticle.excerpt,
+            content: localArticle.content,
+            image: localArticle.image,
+            category: localArticle.category,
+            date: localArticle.date,
+            read_time: localArticle.readTime
+          });
+          return;
+        }
+        throw error;
+      }
+      
+      setArticle({
+        ...data,
+        read_time: data.read_time || '5 min'
+      });
     } catch (err) {
       console.error('Error fetching article:', err);
+      // Fallback check if error occurred
+      const localArticle = articles.find(a => a.id === id);
+      if (localArticle) {
+        setArticle({
+          id: localArticle.id,
+          title: localArticle.title,
+          excerpt: localArticle.excerpt,
+          content: localArticle.content,
+          image: localArticle.image,
+          category: localArticle.category,
+          date: localArticle.date,
+          read_time: localArticle.readTime
+        });
+      }
     } finally {
       setLoading(false);
     }
