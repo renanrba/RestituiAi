@@ -10,6 +10,9 @@ import { BlogPage } from './pages/BlogPage';
 import { ArticlePage } from './pages/ArticlePage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminLogin } from './pages/AdminLogin';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { AIChatbot } from './components/AIChatbot';
 
@@ -24,6 +27,15 @@ export default function App() {
             <Route path="/blog/:id" element={<ArticlePage />} />
             <Route path="/termos" element={<TermsPage />} />
             <Route path="/privacidade" element={<PrivacyPage />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
           <WhatsAppButton />
           <AIChatbot />

@@ -40,6 +40,7 @@ const defaultSocialLinks = [
 const defaultLegalLinks = [
   { name: "Termos e Condições", href: "/termos" },
   { name: "Política de Privacidade", href: "/privacidade" },
+  { name: "Admin", href: "/admin" },
 ];
 
 export function Footer({ onOpenModal }: FooterProps) {

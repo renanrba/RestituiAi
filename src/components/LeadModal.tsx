@@ -24,6 +24,10 @@ export function LeadModal({ isOpen, onClose }: LeadModalProps) {
     
     try {
       // Supabase integration
+      if (!supabase) {
+        throw new Error('Supabase não configurado. Por favor, adicione as chaves VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nas configurações.');
+      }
+
       const { error } = await supabase
         .from('leads')
         .insert([{ 
@@ -37,10 +41,10 @@ export function LeadModal({ isOpen, onClose }: LeadModalProps) {
 
       if (error) throw error;
       setStatus('success');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving lead:', error);
-      // Fallback for demo
-      setTimeout(() => setStatus('success'), 1000);
+      setStatus('error');
+      // We'll show the error message in the UI if needed, but for now just set status to error
     }
   };
 
@@ -102,6 +106,20 @@ export function LeadModal({ isOpen, onClose }: LeadModalProps) {
                     className="mt-8 px-6 py-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-xl transition-colors"
                   >
                     Enviar nova solicitação
+                  </button>
+                </div>
+              ) : status === 'error' ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center h-full">
+                  <div className="w-20 h-20 bg-red-100 dark:bg-red-400/20 rounded-full flex items-center justify-center mb-6">
+                    <X className="w-10 h-10 text-red-500 dark:text-red-300" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Ops! Algo deu errado.</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-justify">Não conseguimos enviar suas informações. Verifique se o banco de dados está configurado corretamente ou tente novamente mais tarde.</p>
+                  <button 
+                    onClick={() => setStatus('idle')}
+                    className="mt-8 px-6 py-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-xl transition-colors"
+                  >
+                    Tentar novamente
                   </button>
                 </div>
               ) : (
