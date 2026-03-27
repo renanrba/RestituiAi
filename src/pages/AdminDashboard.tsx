@@ -16,7 +16,8 @@ import {
   ArrowLeft,
   Download,
   RefreshCw,
-  LogOut
+  LogOut,
+  AlertCircle
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
@@ -36,6 +37,7 @@ interface Lead {
 export function AdminDashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
@@ -56,16 +58,18 @@ export function AdminDashboard() {
       return;
     }
     setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase
+      const { data, error: supabaseError } = await supabase
         .from('leads')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (supabaseError) throw supabaseError;
       setLeads(data || []);
-    } catch (error) {
-      console.error('Error fetching leads:', error);
+    } catch (err: any) {
+      console.error('Error fetching leads:', err);
+      setError(err.message || 'Erro ao carregar leads. Verifique as permissões (RLS) no Supabase.');
     } finally {
       setLoading(false);
     }
@@ -173,6 +177,13 @@ export function AdminDashboard() {
             <div className="p-8 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-100 dark:border-amber-500/20">
               <p className="text-amber-800 dark:text-amber-400 text-sm font-medium text-center">
                 ⚠️ Supabase não configurado. Adicione as variáveis de ambiente <strong>VITE_SUPABASE_URL</strong> e <strong>VITE_SUPABASE_ANON_KEY</strong> para visualizar os dados reais.
+              </p>
+            </div>
+          )}
+          {error && (
+            <div className="p-8 bg-red-50 dark:bg-red-500/10 border-b border-red-100 dark:border-red-500/20">
+              <p className="text-red-800 dark:text-red-400 text-sm font-medium text-center flex items-center justify-center gap-2">
+                <AlertCircle className="w-5 h-5" /> {error}
               </p>
             </div>
           )}
